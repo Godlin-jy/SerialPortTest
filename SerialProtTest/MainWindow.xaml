@@ -1,0 +1,280 @@
+﻿<Window x:Class="SerialPortTest.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SerialPortTest"
+        xmlns:vm="clr-namespace:SerialPortTest.ViewModels"
+        xmlns:converts ="clr-namespace:SerialPortTest.Converts"
+        mc:Ignorable="d"
+        Title="串口调试助手  Large_Lin" Height="610" Width="800"
+        Icon="Images/SerialPort.png">
+
+    <Window.Resources>
+        <converts:IsOpenToButtonTextConverter x:Key="IsOpenToButtonTextConverter"/>
+        <converts:BoolToBrushConverter x:Key="BoolToBrushConverter"/>
+    </Window.Resources>
+
+    <!-- 主布局容器 -->
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <!-- 接收区和串口配置 -->
+            <RowDefinition Height="120"/>
+            <!-- 发送区 -->
+            <RowDefinition Height="50"/>
+            <!-- 发送文件设置 -->
+            <RowDefinition Height="30"/>
+            <!-- 发送文件进度条 -->
+            <RowDefinition Height="30"/>
+            <!-- 底部状态栏 -->
+        </Grid.RowDefinitions>
+
+        <!-- 接收区和串口配置 -->
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="160"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- 接收数据部分 -->
+
+            <RichTextBox x:Name="receiveBox"
+                         Margin="10" BorderThickness="2" 
+                         Width="Auto" Height="Auto"
+                         VerticalScrollBarVisibility="Visible" TextChanged="receiveBox_TextChanged">
+                <FlowDocument PageHeight="Auto"
+                              PageWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType={x:Type RichTextBox}}}">
+                    <Paragraph Margin="0 0 20 0">
+                        <Run Text="{Binding SerialPortReceiveViewModel.ReceivedData, Mode=OneWay}" />
+                    </Paragraph>
+                </FlowDocument>
+            </RichTextBox>
+
+
+            <StackPanel Grid.Column="1" Margin="5">
+                <TextBlock Text="串口调试助手" FontSize="16" 
+                           HorizontalAlignment="Center" 
+                           VerticalAlignment="Center" 
+                           FontWeight="Bold" />
+                <!-- 串口设置 -->
+                <StackPanel Orientation="Horizontal" Margin="5">
+                    <TextBlock Text="串口" Width="40" VerticalAlignment="Center" />
+                    <ComboBox ItemsSource="{Binding SerialPortSettingViewModel.PortNames}" 
+                                  SelectedItem="{Binding SerialPortSettingViewModel.Settings.PortName}" 
+                                  Width="100"
+                                  IsEnabled="{Binding SerialPortSettingViewModel.IsEnableComboBox}"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="5">
+                    <TextBlock Text="波特率" Width="40" VerticalAlignment="Center" />
+                    <ComboBox ItemsSource="{Binding SerialPortSettingViewModel.BaudRates}" 
+                                  SelectedItem="{Binding SerialPortSettingViewModel.Settings.BaudRate}"
+                                  Width="100"
+                                  IsEnabled="{Binding SerialPortSettingViewModel.IsEnableComboBox}"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="5">
+                    <TextBlock Text="停止位" Width="40" VerticalAlignment="Center" />
+                    <ComboBox ItemsSource="{Binding SerialPortSettingViewModel.StopBits}" 
+                                  SelectedItem="{Binding SerialPortSettingViewModel.Settings.StopBits}"
+                                  Width="100"
+                                  IsEnabled="{Binding SerialPortSettingViewModel.IsEnableComboBox}"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="5">
+                    <TextBlock Text="数据位" Width="40" VerticalAlignment="Center" />
+                    <ComboBox ItemsSource="{Binding SerialPortSettingViewModel.DataBits}" 
+                                  SelectedItem="{Binding SerialPortSettingViewModel.Settings.DataBits}"
+                                  Width="100"
+                                  IsEnabled="{Binding SerialPortSettingViewModel.IsEnableComboBox}"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="5">
+                    <TextBlock Text="校验位" Width="40" VerticalAlignment="Center" />
+                    <ComboBox ItemsSource="{Binding SerialPortSettingViewModel.Paritys}" 
+                                  SelectedItem="{Binding SerialPortSettingViewModel.Settings.Parity}"
+                                  Width="100"
+                                  IsEnabled="{Binding SerialPortSettingViewModel.IsEnableComboBox}"/>
+                </StackPanel>
+
+                <!-- 打开串口按钮 -->
+                <StackPanel Orientation="Horizontal" Margin="5">
+                    <Ellipse Height="20" Stroke="Black" Width="20" Margin="10,0,10,0" StrokeThickness="3" Fill="{Binding SerialPortSettingViewModel.Settings.IsPortOpen, Converter={StaticResource BoolToBrushConverter}}"/>
+                    <Button Width="100" Height="25" 
+                                Content="{Binding SerialPortSettingViewModel.Settings.IsPortOpen, Converter={StaticResource IsOpenToButtonTextConverter}}"
+                                Style="{DynamicResource GeneralButtonStyle}"
+                                Command="{Binding SerialPortSettingViewModel.OpenOrClosePortCommand}"/>
+                </StackPanel>
+
+                <!-- 接受区配置 -->
+                <StackPanel Orientation="Horizontal" Margin="5 20 5 5">
+                    <Button Content="保存窗口" Width="65" Margin="0 0 10 0" Command="{Binding SerialPortReceiveViewModel.SaveDataCommand}"/>
+                    <Button Content="清除接收" Width="65" Command="{Binding SerialPortReceiveViewModel.ClearDataCommand}"/>
+                </StackPanel>
+
+                <CheckBox Content="HEX显示" Margin="5" IsChecked="{Binding SerialPortReceiveViewModel.IsHexDisplayEnabled}"/>
+                <CheckBox Content="时间显示" Margin="5" IsChecked="{Binding SerialPortReceiveViewModel.IsTimeDisplayEnabled}"/>
+                <CheckBox Content="自动换行" Margin="5" IsChecked="{Binding SerialPortReceiveViewModel.IsAutoLineEnabled}"/>
+            </StackPanel>
+
+        </Grid>
+
+        <!-- 发送区设置 -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition Width="160"/>
+            </Grid.ColumnDefinitions>
+
+            <!--发送区文本-->
+            <RichTextBox x:Name="SendBox"
+                         Margin="10" BorderThickness="2" 
+                         Width="Auto" Height="Auto"
+                         VerticalScrollBarVisibility="Visible" TextChanged="receiveBox_TextChanged">    
+                <FlowDocument PageHeight="Auto"
+                              PageWidth="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType={x:Type RichTextBox}}}">
+                    <Paragraph Margin="0 0 20 0">
+                        <Run Text="{Binding SerialPortSendViewModel.SendData, Mode=TwoWay}" />
+                    </Paragraph>
+                </FlowDocument>
+            </RichTextBox>
+
+            <!--发送区设置-->
+            <StackPanel Grid.Column="1" Margin="5">
+                <StackPanel Orientation="Horizontal" Margin="5">
+                    <Button Content="发送数据" 
+                            Width="65" 
+                            Margin="0 0 10 0"
+                            Command="{Binding SerialPortSendViewModel.SendDataCommand}"/>
+                    <Button Content="清除发送" 
+                            Width="65"
+                            Command="{Binding SerialPortSendViewModel.ClearSendCommand}"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="5">
+                    <CheckBox Content="定时发送" VerticalAlignment="Center" />
+                    <TextBox BorderThickness="1" Width="40" Margin="10 0 0 0"/>
+                    <TextBlock Text="ms" Width="40" Margin="5 0 5 0" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <CheckBox Content="Hex发送" Margin="5"/>
+                <CheckBox Content="添加换行符" Margin="5"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- 发送文件设置 -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="250"/>
+            </Grid.ColumnDefinitions>
+            <Grid Margin="10 10 10 10">
+                <TextBox HorizontalAlignment="Left" 
+                         BorderThickness="2" 
+                         Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType={x:Type Grid}}}"/>
+            </Grid>
+            <DockPanel Grid.Column="1">
+                <Button Content="打开文件" Width="68" Margin="10 15 5 15"/>
+                <Button Content="开始发送" Width="68" Margin="10 15 5 15"/>
+                <Button Content="停止发送" Width="68" Margin="5 15 5 15"/>
+            </DockPanel>
+        </Grid>
+
+        <!-- 发送文件进度条 -->
+        <Grid Grid.Row="3" Margin="10 6 10 6">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="80"/>
+            </Grid.ColumnDefinitions>
+            <Canvas>
+                <Rectangle HorizontalAlignment="Left" Stroke="Black" 
+                           Width="{Binding ActualWidth, RelativeSource={RelativeSource AncestorType={x:Type Canvas}}}"
+                           Height="20"/>
+
+                <Rectangle HorizontalAlignment="Left" Fill="#FF23C24F"
+                           Width="400" Canvas.Top="1.5" Canvas.Left="1.5"
+                           Height="17"/>
+            </Canvas>
+            <TextBlock Text="40%" Width="40" Margin="5 0 5 0" FontSize="14" FontWeight="Bold"
+                            VerticalAlignment="Center"/>
+            <TextBlock Text="Running" HorizontalAlignment="Center" Grid.Column="1"
+                       VerticalAlignment="Center"/>
+        </Grid>
+
+        <!-- 状态栏 -->
+        <StatusBar Margin="0 5 0 0" Grid.Row="4">
+            <StatusBarItem>
+                <TextBlock Text="@Large_Lin" 
+                               FontWeight="Bold"
+                               HorizontalAlignment="Center" 
+                               VerticalAlignment="Center"/>
+            </StatusBarItem>
+            <StatusBarItem>
+                <Button Content="{StaticResource bilibili}" 
+                            Style="{DynamicResource IconButtonStyle}"
+                            Width="20" Height="20" VerticalAlignment="Center"
+                            ToolTip="B站主页"
+                            Command="{Binding NavigationViewModel.OpenBilibiliCommand}"/>
+            </StatusBarItem>
+            <StatusBarItem>
+                <Button Content="{StaticResource blog}" 
+                            Style="{DynamicResource IconButtonStyle}"
+                            Width="20" Height="20" VerticalAlignment="Center"
+                            ToolTip="博客园主页"
+                            Command="{Binding NavigationViewModel.OpenBlogCommand}"/>
+            </StatusBarItem>
+            <StatusBarItem Width="100">
+                <Button Content="{StaticResource github}" 
+                            Style="{DynamicResource IconButtonStyle}"
+                            Width="20" Height="20" VerticalAlignment="Center"
+                            ToolTip="Github主页"
+                            Command="{Binding NavigationViewModel.OpenGithubCommand}"/>
+            </StatusBarItem>
+            <Separator Width="2" HorizontalAlignment="Left"/>
+            <StatusBarItem>
+                <TextBlock Text="Send:" 
+                               FontWeight="Bold"
+                               HorizontalAlignment="Center" 
+                               VerticalAlignment="Center"/>
+            </StatusBarItem>
+            <StatusBarItem Width="100">
+                <TextBlock Text="0" 
+                               FontWeight="Bold"
+                               HorizontalAlignment="Center" 
+                               VerticalAlignment="Center"/>
+            </StatusBarItem>
+            <Separator Width="2" HorizontalAlignment="Left"/>
+            <StatusBarItem>
+                <TextBlock Text="Recieve:" 
+                               FontWeight="Bold"
+                               HorizontalAlignment="Center" 
+                               VerticalAlignment="Center"/>
+            </StatusBarItem>
+            <StatusBarItem Width="100">
+                <TextBlock Text="0" 
+                               FontWeight="Bold"
+                               HorizontalAlignment="Center" 
+                               VerticalAlignment="Center"/>
+            </StatusBarItem>
+            <Separator Width="2" HorizontalAlignment="Left"/>
+            <StatusBarItem>
+                <TextBlock Text="当前时间:" 
+                               FontWeight="Bold"
+                               HorizontalAlignment="Center" 
+                               VerticalAlignment="Center"/>
+            </StatusBarItem>
+            <StatusBarItem>
+                <TextBlock Text="{Binding TimeViewModel.CurrentTime}"
+                               FontWeight="Bold"
+                               HorizontalAlignment="Center" 
+                               VerticalAlignment="Center"/>
+            </StatusBarItem>
+            <Separator Width="2" HorizontalAlignment="Left"/>
+            <StatusBarItem HorizontalAlignment="Right">
+                <Image Source="Images/Large_Lin.png" Width="20" Height="20"/>
+            </StatusBarItem>
+        </StatusBar>
+
+    </Grid>
+</Window>
